@@ -12,6 +12,7 @@ DB_USER="********"
 # 数据库密码
 DB_PASS="********"
 
+
 # 设置密码环境变量
 export PGPASSWORD="$DB_PASS"
 
@@ -120,15 +121,15 @@ restore_typerelation_table() {
     # 创建临时SQL文件用于导入数据
     local temp_sql_file="/tmp/TypeRelation_restore.sql"
     echo "BEGIN;" > "$temp_sql_file"
+    echo "DELETE FROM \"TypeRelation\";" >> "$temp_sql_file"
     
-    # 解析备份文件并生成INSERT语句
-    # 跳过前2行（表头）和最后1行（记录数统计）
+    # 跳过前2行（表头）并逐行处理数据
     local line_num=0
     while IFS= read -r line; do
         line_num=$((line_num + 1))
         
         # 跳过前2行表头和最后1行记录数统计
-        if [ $line_num -le 2 ] || [[ "$line" =~ "行记录)" ]]; then
+        if [ $line_num -le 2 ] || [[ "$line" =~ "行记录)" ]] || [[ "$line" =~ "-----" ]]; then
             continue
         fi
         
@@ -137,25 +138,17 @@ restore_typerelation_table() {
             continue
         fi
         
-        # 解析数据行，构造INSERT语句
-        # 备份文件格式示例:
-        #  id | userId |   bookId   | source | target 
-        # ----+--------+------------+--------+--------
-        #   1 |      2 | 0          | 微信支付 | 微信
-        # (1 行记录)
+        # 分割行数据，使用'|'作为分隔符
+        IFS='|' read -ra FIELDS <<< "$line"
         
-        # 使用正则表达式提取字段值
-        if [[ $line =~ ^[[:space:]]*([0-9]+)[[:space:]]*\|[[:space:]]*([0-9]+)[[:space:]]*\|[[:space:]]*(.+)[[:space:]]*\|[[:space:]]*(.+)[[:space:]]*\|[[:space:]]*(.+)[[:space:]]*$ ]]; then
-            local id="${BASH_REMATCH[1]}"
-            local userId="${BASH_REMATCH[2]}"
-            local bookId="${BASH_REMATCH[3]// /}"  # 去除空格
-            local source="${BASH_REMATCH[4]// /}"  # 去除空格
-            local target="${BASH_REMATCH[5]// /}"  # 去除空格
-            
-            # 处理字段值中的特殊字符
-            bookId=$(echo "$bookId" | sed "s/'/''/g")
-            source=$(echo "$source" | sed "s/'/''/g")
-            target=$(echo "$target" | sed "s/'/''/g")
+        # 确保有足够的字段
+        if [ ${#FIELDS[@]} -ge 5 ]; then
+            # 提取并清理字段值
+            local id=$(echo "${FIELDS[0]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            local userId=$(echo "${FIELDS[1]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            local bookId=$(echo "${FIELDS[2]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed "s/'/''/g")
+            local source=$(echo "${FIELDS[3]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed "s/'/''/g")
+            local target=$(echo "${FIELDS[4]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed "s/'/''/g")
             
             # 生成INSERT语句
             echo "INSERT INTO \"TypeRelation\" (\"id\", \"userId\", \"bookId\", \"source\", \"target\") VALUES ($id, $userId, '$bookId', '$source', '$target');" >> "$temp_sql_file"
