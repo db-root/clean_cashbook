@@ -1,6 +1,6 @@
 # Cashbook 数据库清理工具
 
-该脚本用于清理 ******** 数据库中指向已删除账本的无效记录，避免在界面中显示"未知账本DB ID: N/A"的问题。
+该工具用于清理 cashbook 数据库中指向已删除账本的无效记录，避免在界面中显示"未知账本DB ID: N/A"的问题。
 ![alt text](image.png)
 
 ## 功能说明
@@ -25,7 +25,7 @@
 # 数据库连接信息
 DB_HOST="xxx.xxx.xxx.xxx"    # 数据库主机IP（例如：192.168.1.100）
 DB_PORT="xxxxx"              # 数据库端口（例如：5432）
-DB_NAME="********"           # 数据库名称（例如：********）
+DB_NAME="********"           # 数据库名称（例如：cashbook）
 DB_USER="********"           # 数据库用户名（例如：postgres）
 DB_PASS="********"           # 数据库密码（例如：mypassword）
 
@@ -36,25 +36,25 @@ DB_PASS="********"           # 数据库密码（例如：mypassword）
 
 ```
 # 进入脚本目录
-cd /opt/code/bash/clean_********
+cd /opt/code/bash/clean_cashbook
 
 # 添加执行权限
-chmod +x clean_********_orphaned_records.sh
+chmod +x clean_cashbook_orphaned_records.sh
 
 # 执行清理操作（默认）
-./clean_********_orphaned_records.sh
+./clean_cashbook_orphaned_records.sh
 
 # 或明确指定执行清理操作
-./clean_********_orphaned_records.sh clean
+./clean_cashbook_orphaned_records.sh clean
 
 # 执行备份操作（备份所有表）
-./clean_********_orphaned_records.sh backup
+./clean_cashbook_orphaned_records.sh backup
 
 # 从指定备份目录恢复TypeRelation表数据
-./clean_********_orphaned_records.sh restore /tmp/********_backup_20251124_153915
+./clean_cashbook_orphaned_records.sh restore /tmp/cashbook_backup_20251124_153915
 
 # 显示帮助信息
-./clean_********_orphaned_records.sh help
+./clean_cashbook_orphaned_records.sh help
 ```
 
 ## 操作说明
@@ -68,7 +68,7 @@ chmod +x clean_********_orphaned_records.sh
 ### 备份操作 (backup)
 
 - 备份所有相关表的数据：Book、Budget、FixedFlow、Flow、Receivable、TypeRelation
-- 备份文件存储在 `/tmp/********_backup_YYYYMMDD_HHMMSS/` 目录中
+- 备份文件存储在 `/tmp/cashbook_backup_YYYYMMDD_HHMMSS/` 目录中
 - 每个表单独备份到对应的 .txt 文件中
 
 ### 恢复操作 (restore)
